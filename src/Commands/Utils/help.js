@@ -12,25 +12,36 @@ module.exports = {
     const allCmds    = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
 
-    const buttons = categories.map((cat) => ([
-      new Api.KeyboardButtonCallback({
-        text: `📂 ${cat}`,
-        data: Buffer.from(`help:${cat}`),
+    const rows = categories.map((cat) =>
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: `📂 ${cat}`,
+            data: Buffer.from(`help:${cat}`),
+          }),
+        ],
       })
-    ]));
+    );
 
-    // Tambah close button
-    buttons.push([
-      new Api.KeyboardButtonCallback({
-        text: '✖ Close',
-        data: Buffer.from('help:close'),
+    rows.push(
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: '✖ Close',
+            data: Buffer.from('help:close'),
+          }),
+        ],
       })
-    ]);
+    );
 
-    await client.sendMessage(message.chatId, {
-      message:   `🌸 **Vogue Help**\n\nPilih kategori:`,
-      parseMode: 'md',
-      buttons,
-    });
+    await client.invoke(
+      new Api.messages.SendMessage({
+        peer:        await client.getInputEntity(message.chatId),
+        message:     `🌸 **Vogue Help**\n\nPilih kategori:`,
+        parseMode:   'md',
+        replyMarkup: new Api.ReplyInlineMarkup({ rows }),
+        noWebpage:   true,
+      })
+    );
   },
 };
