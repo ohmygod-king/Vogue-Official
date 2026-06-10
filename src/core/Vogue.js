@@ -8,7 +8,7 @@ const config     = require('../Settings');
 const Registry   = require('./registry');
 const Loader     = require('./loader');
 const { defaultChain } = require('./middleware');
-const logger     = require('../Utils/logger');
+const logger     = require('./Utils/logger');
 
 
 const SessionStore = require('../Database/session');
