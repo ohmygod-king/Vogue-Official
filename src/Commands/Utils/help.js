@@ -9,9 +9,9 @@ module.exports = {
   aliases: ['h', 'menu'],
   
   execute: async ({ client, message, registry }) => {
-    const allCmds    = registry.getAllCommands();
+    const allCmds = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
-  
+    
     const rows = categories.map((cat) =>
       new Api.KeyboardButtonRow({
         buttons: [
@@ -22,7 +22,7 @@ module.exports = {
         ],
       })
     );
-  
+    
     rows.push(
       new Api.KeyboardButtonRow({
         buttons: [
@@ -33,17 +33,17 @@ module.exports = {
         ],
       })
     );
-  
-    // ✅ Ambil peer dari message langsung — bukan chatId
-    const peer = message.peerId;
-  
+    
+    // ✅ Pakai senderId langsung sebagai peer
+    const senderId = message.senderId.valueOf();
+    
     await client.invoke(
       new Api.messages.SendMessage({
-        peer,
-        message:     '🌸 Vogue Help\n\nPilih kategori:',
+        peer: new Api.InputPeerSelf(),
+        message: '🌸 Vogue Help\n\nPilih kategori:',
         replyMarkup: new Api.ReplyInlineMarkup({ rows }),
-        noWebpage:   true,
-        randomId:    BigInt(Math.floor(Math.random() * 1e15)),
+        noWebpage: true,
+        randomId: BigInt(Math.floor(Math.random() * 1e15)),
       })
     );
   },
