@@ -1,6 +1,6 @@
 'use strict';
 
-const { TelegramClient } = require('telegram');
+const { TelegramClient, Api } = require('telegram');
 const { StringSession }  = require('telegram/sessions');
 const { NewMessage, Raw }     = require('telegram/events');
 const input              = require('input');
