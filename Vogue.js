@@ -10,20 +10,6 @@ const path               = require('path');
 const config             = require('./src/Settings');
 const chalk = require('chalk');
 
-const client = new TelegramClient(session, config.apiId, config.apiHash, {
-  connectionRetries: 5,
-  autoReconnect:     true,
-  baseLogger: {
-    levels: [],
-    log: () => {},
-    error: () => {},
-    warn: () => {},
-    info: () => {},
-    debug: () => {},
-  },
-});
-
-
 const DB_PATH = path.resolve(__dirname, 'Database/vogue.db');
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
@@ -53,6 +39,19 @@ const Session = {
     );
   }),
 };
+
+const client = new TelegramClient(session, config.apiId, config.apiHash, {
+  connectionRetries: 5,
+  autoReconnect:     true,
+  baseLogger: {
+    levels: [],
+    log: () => {},
+    error: () => {},
+    warn: () => {},
+    info: () => {},
+    debug: () => {},
+  },
+});
 
 const commands = new Map();
 
