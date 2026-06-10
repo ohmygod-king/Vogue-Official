@@ -20,9 +20,11 @@ module.exports = {
       Button.inline('✖ Close', Buffer.from('help:close')),
     ]);
 
-    const chat = await message.getChat();
+    // Hapus pesan command
+    await message.delete({ revoke: true });
 
-    await client.sendMessage(chat, {
+    // Pakai senderId langsung
+    await client.sendMessage(message.senderId, {
       message: '🌸 Vogue Help\n\nPilih kategori:',
       buttons,
     });
