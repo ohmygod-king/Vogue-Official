@@ -47,7 +47,6 @@ const register = (def) => {
   if (Array.isArray(def.aliases)) {
     def.aliases.forEach((a) => commands.set(a, def));
   }
-  logger.debug(`[Registry] Registered: ${config.prefix}${def.name}`);
 };
 
 const resolve = (name) => commands.get(name) || null;
@@ -64,7 +63,7 @@ const loadCommands = (dir) => {
           delete require.cache[require.resolve(full)];
           register(require(full));
         } catch (err) {
-          logger.error(`[Loader] Gagal load: ${entry.name} → ${err.message}`);
+          log.error(`[Loader] Gagal load: ${entry.name} → ${err.message}`);
         }
       }
     }
