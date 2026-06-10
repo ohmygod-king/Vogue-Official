@@ -29,6 +29,8 @@ module.exports = {
     // Hapus pesan command asli
     await message.delete({ revoke: true });
     
+    console.log('Buttons:', JSON.stringify(buttons, null, 2));
+    
     // Kirim ke chat yang sama pakai sendMessage bawaan gramjs
     await client.sendMessage(message.peerId, {
       message: '🌸 Vogue Help\n\nPilih kategori:',
