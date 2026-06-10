@@ -8,12 +8,15 @@ const config     = require('../Settings');
 const Registry   = require('./registry');
 const Loader     = require('./loader');
 const { defaultChain } = require('./middleware');
-const logger     = require('../Utils/logger');
+const logger     = require('./Utils/logger');
 
 
 const SessionStore = require('../Database/session');
-const savedSession = SessionStore.load(config.sessionName) || '';
+const savedSession = await SessionStore.load(config.sessionName) || '';
 const session = new StringSession(savedSession);
+const sessionString = client.session.save();
+await SessionStore.save(config.sessionName, sessionString);
+logger.info('[Vogue] Session tersimpan ke database');
 
 async function boot() {
   logger.info(`[Vogue] Starting ${config.botName} v${config.version}...`);
