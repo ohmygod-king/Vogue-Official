@@ -3,15 +3,15 @@
 const { Api } = require('telegram');
 
 module.exports = {
-  name:        'help',
+  name: 'help',
   description: 'Tampilkan semua commands',
-  category:    'Utils',
-  aliases:     ['h', 'menu'],
-
+  category: 'Utils',
+  aliases: ['h', 'menu'],
+  
   execute: async ({ client, message, registry }) => {
-    const allCmds    = registry.getAllCommands();
+    const allCmds = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
-
+    
     const rows = categories.map((cat) =>
       new Api.KeyboardButtonRow({
         buttons: [
@@ -22,7 +22,7 @@ module.exports = {
         ],
       })
     );
-
+    
     rows.push(
       new Api.KeyboardButtonRow({
         buttons: [
@@ -33,14 +33,17 @@ module.exports = {
         ],
       })
     );
-
+    
+    const peer = await client.getInputEntity(message.chatId);
+    const text = '🌸 Vogue Help\n\nPilih kategori:';
+    
     await client.invoke(
       new Api.messages.SendMessage({
-        peer:        await client.getInputEntity(message.chatId),
-        message:     `🌸 **Vogue Help**\n\nPilih kategori:`,
-        parseMode:   'md',
+        peer,
+        message: text,
         replyMarkup: new Api.ReplyInlineMarkup({ rows }),
-        noWebpage:   true,
+        noWebpage: true,
+        randomId: BigInt(Math.floor(Math.random() * 1e15)),
       })
     );
   },
