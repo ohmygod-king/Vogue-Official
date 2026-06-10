@@ -12,39 +12,27 @@ module.exports = {
     const allCmds = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
     
-    const rows = categories.map((cat) =>
-      new Api.KeyboardButtonRow({
-        buttons: [
-          new Api.KeyboardButtonCallback({
-            text: `📂 ${cat}`,
-            data: Buffer.from(`help:${cat}`),
-          }),
-        ],
-      })
-    );
+    const buttons = categories.map((cat) => ([
+      new Api.KeyboardButtonCallback({
+        text: `📂 ${cat}`,
+        data: Buffer.from(`help:${cat}`),
+      }),
+    ]));
     
-    rows.push(
-      new Api.KeyboardButtonRow({
-        buttons: [
-          new Api.KeyboardButtonCallback({
-            text: '✖ Close',
-            data: Buffer.from('help:close'),
-          }),
-        ],
-      })
-    );
+    buttons.push([
+      new Api.KeyboardButtonCallback({
+        text: '✖ Close',
+        data: Buffer.from('help:close'),
+      }),
+    ]);
     
-    // ✅ Pakai senderId langsung sebagai peer
-    const senderId = message.senderId.valueOf();
+    // Hapus pesan command asli
+    await message.delete({ revoke: true });
     
-    await client.invoke(
-      new Api.messages.SendMessage({
-        peer: new Api.InputPeerSelf(),
-        message: '🌸 Vogue Help\n\nPilih kategori:',
-        replyMarkup: new Api.ReplyInlineMarkup({ rows }),
-        noWebpage: true,
-        randomId: BigInt(Math.floor(Math.random() * 1e15)),
-      })
-    );
+    // Kirim ke chat yang sama pakai sendMessage bawaan gramjs
+    await client.sendMessage(message.peerId, {
+      message: '🌸 Vogue Help\n\nPilih kategori:',
+      buttons,
+    });
   },
 };
