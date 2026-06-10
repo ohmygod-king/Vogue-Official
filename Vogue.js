@@ -5,21 +5,21 @@ const { StringSession }  = require('telegram/sessions');
 const { NewMessage }     = require('telegram/events');
 const input              = require('input');
 const sqlite3            = require('sqlite3').verbose();
-const pino               = require('pino');
 const fs                 = require('fs');
 const path               = require('path');
 const config             = require('./src/Settings');
 const chalk = require('chalk');
 
-const logger = pino({
-  level: config.isDev ? 'debug' : 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize:      true,
-      translateTime: 'SYS:HH:MM:ss',
-      ignore:        'pid,hostname',
-    },
+const client = new TelegramClient(session, config.apiId, config.apiHash, {
+  connectionRetries: 5,
+  autoReconnect:     true,
+  baseLogger: {
+    levels: [],
+    log: () => {},
+    error: () => {},
+    warn: () => {},
+    info: () => {},
+    debug: () => {},
   },
 });
 
@@ -85,7 +85,6 @@ const loadCommands = (dir) => {
   };
 
   walk(dir);
-  logger.info(`[Loader] ${commands.size} commands terdaftar`);
 };
 
 const printBanner = () => {
@@ -114,83 +113,73 @@ const log = {
 
 (async () => {
   printBanner();
-
-  // ─── Session ────────────────────────────────
-  log.info('Loading session...');
-  const saved   = await Session.load(config.sessionName);
+  
+  const saved = await Session.load(config.sessionName);
   const session = new StringSession(saved);
-
-  // ─── Client ─────────────────────────────────
-  log.info('Initializing Telegram client...');
+  
   const client = new TelegramClient(session, config.apiId, config.apiHash, {
     connectionRetries: 5,
-    autoReconnect:     true,
+    autoReconnect: true,
+    baseLogger: {
+      levels: [],
+      log: () => {},
+      error: () => {},
+      warn: () => {},
+      info: () => {},
+      debug: () => {},
+    },
   });
-
-  // ─── Auth ───────────────────────────────────
-  log.blank();
-  log.info('Authenticating...');
+  
   await client.start({
     phoneNumber: () => input.text(chalk.gray('  › ') + 'Phone number (+628xxx): '),
-    password:    () => input.text(chalk.gray('  › ') + '2FA Password: '),
-    phoneCode:   () => input.text(chalk.gray('  › ') + 'OTP Code: '),
-    onError:     (err) => log.error(`Auth failed: ${err.message}`),
+    password: () => input.text(chalk.gray('  › ') + '2FA Password: '),
+    phoneCode: () => input.text(chalk.gray('  › ') + 'OTP Code: '),
+    onError: (err) => log.error(`Auth failed: ${err.message}`),
   });
-
+  
   log.success('Connected to Telegram');
-
-  // ─── Save Session ───────────────────────────
+  
   await Session.save(config.sessionName, client.session.save());
   log.success('Session saved');
-
-  // ─── Commands ───────────────────────────────
+  
   log.blank();
   log.divider();
-  log.info('Loading commands...');
   loadCommands(path.resolve(__dirname, 'src/Commands'));
   log.success(`${commands.size} commands registered`);
   log.divider();
-
-  // ─── Handler ────────────────────────────────
+  
   client.addEventHandler(async (event) => {
     try {
-      const msg  = event.message;
+      const msg = event.message;
       if (!msg?.text) return;
-
+      
       const text = msg.text.trim();
       if (!text.startsWith(config.prefix)) return;
-
+      
       const parts = text.slice(config.prefix.length).trim().split(/\s+/);
-      const name  = parts[0].toLowerCase();
-      const args  = parts.slice(1);
-      const cmd   = resolve(name);
+      const name = parts[0].toLowerCase();
+      const args = parts.slice(1);
+      const cmd = resolve(name);
       if (!cmd) return;
-
-      if (config.ownerId && Number(msg.senderId) !== config.ownerId) {
-        log.warn(`Blocked unauthorized: ${msg.senderId}`);
-        return;
-      }
-
-      log.debug(`CMD ${config.prefix}${name} — user=${msg.senderId}`);
-
+      
+      if (config.ownerId && Number(msg.senderId) !== config.ownerId) return;
+      
       await cmd.execute({
         client,
         message: msg,
         args,
-        reply: (text) => msg.reply({ message: text }),
+        reply: (t) => msg.reply({ message: t }),
       });
-
+      
     } catch (err) {
       log.error(`Handler: ${err.message}`);
     }
   }, new NewMessage({}));
-
-  // ─── Ready ──────────────────────────────────
+  
   log.blank();
   log.success(chalk.magenta.bold(`${config.botName} is online`) + chalk.gray(` — prefix "${config.prefix}"`));
   log.blank();
-
-  // ─── Shutdown ───────────────────────────────
+  
   process.on('SIGINT', async () => {
     log.blank();
     log.warn('Shutting down...');
@@ -199,7 +188,7 @@ const log = {
     log.blank();
     process.exit(0);
   });
-
+  
 })().catch((err) => {
   log.error(`Boot failed: ${err.message}`);
   process.exit(1);
