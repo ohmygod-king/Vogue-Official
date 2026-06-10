@@ -1,6 +1,6 @@
 'use strict';
 
-const { Button } = require('telegram/tl/custom/button');
+const { Api } = require('telegram');
 
 module.exports = {
   name:        'help',
@@ -12,21 +12,38 @@ module.exports = {
     const allCmds    = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
 
-    const buttonRows = categories.map((cat) => [
-      Button.inline(`📂 ${cat}`, Buffer.from(`help:${cat}`)),
-    ]);
+    const rows = categories.map((cat) =>
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: `📂 ${cat}`,
+            data: Buffer.from(`help:${cat}`),
+          }),
+        ],
+      })
+    );
 
-    buttonRows.push([
-      Button.inline('✖ Close', Buffer.from('help:close')),
-    ]);
-
-    const markup = client.buildReplyMarkup(buttonRows);
+    rows.push(
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: '✖ Close',
+            data: Buffer.from('help:close'),
+          }),
+        ],
+      })
+    );
 
     await message.delete({ revoke: true });
 
-    await client.sendMessage(message.peerId, {
-      message: '🌸 Vogue Help\n\nPilih kategori:',
-      buttons: markup,
-    });
+    await client.invoke(
+      new Api.messages.SendMessage({
+        peer:        message.peerId,
+        message:     '🌸 Vogue Help\n\nPilih kategori:',
+        replyMarkup: new Api.ReplyInlineMarkup({ rows }),
+        noWebpage:   true,
+        randomId:    BigInt(Math.floor(Math.random() * 1e15)),
+      })
+    );
   },
 };
