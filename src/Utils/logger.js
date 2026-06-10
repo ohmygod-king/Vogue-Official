@@ -1,11 +1,10 @@
-// src/utils/logger.js
+
 const winston = require('winston');
 const chalk   = require('chalk');
 const settings = require('../Settings');
 
 const { combine, timestamp, printf } = winston.format;
 
-// Warna per log level
 const colorLevel = (level) => {
   const map = {
     error: chalk.bold.red,
