@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "telegram": "^2.26.0",
-    "better-sqlite3": "^9.6.0",
+    "sqlite3": "^5.1.7",
     "input": "^1.0.1",
     "chalk": "^4.1.2",
     "pino": "^9.3.1",
