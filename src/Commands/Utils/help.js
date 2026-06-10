@@ -12,21 +12,21 @@ module.exports = {
     const allCmds    = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
 
-    const buttons = categories.map((cat) => [
+    const buttonRows = categories.map((cat) => [
       Button.inline(`📂 ${cat}`, Buffer.from(`help:${cat}`)),
     ]);
 
-    buttons.push([
+    buttonRows.push([
       Button.inline('✖ Close', Buffer.from('help:close')),
     ]);
 
-    // Hapus pesan command
+    const markup = client.buildReplyMarkup(buttonRows);
+
     await message.delete({ revoke: true });
 
-    // Pakai senderId langsung
-    await client.sendMessage(message.senderId, {
+    await client.sendMessage(message.peerId, {
       message: '🌸 Vogue Help\n\nPilih kategori:',
-      buttons,
+      buttons: markup,
     });
   },
 };
