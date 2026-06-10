@@ -9,7 +9,7 @@ const pino               = require('pino');
 const fs                 = require('fs');
 const path               = require('path');
 const config             = require('./src/Settings');
-
+const chalk = require('chalk');
 
 const logger = pino({
   level: config.isDev ? 'debug' : 'info',
@@ -88,30 +88,70 @@ const loadCommands = (dir) => {
   logger.info(`[Loader] ${commands.size} commands terdaftar`);
 };
 
+const printBanner = () => {
+  console.log('');
+  console.log(chalk.magenta.bold('  ██╗   ██╗ ██████╗  ██████╗ ██╗   ██╗███████╗'));
+  console.log(chalk.magenta.bold('  ██║   ██║██╔═══██╗██╔════╝ ██║   ██║██╔════╝'));
+  console.log(chalk.magenta.bold('  ██║   ██║██║   ██║██║  ███╗██║   ██║█████╗  '));
+  console.log(chalk.magenta.bold('  ╚██╗ ██╔╝██║   ██║██║   ██║██║   ██║██╔══╝  '));
+  console.log(chalk.magenta.bold('   ╚████╔╝ ╚██████╔╝╚██████╔╝╚██████╔╝███████╗'));
+  console.log(chalk.magenta.bold('    ╚═══╝   ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝'));
+  console.log('');
+  console.log(chalk.gray('  ') + chalk.white.bold(`${config.botName}`) + chalk.gray(` v${config.version} — Telegram Userbot`));
+  console.log(chalk.gray('  ') + chalk.gray('─'.repeat(44)));
+  console.log('');
+};
+
+const log = {
+  info:    (msg) => console.log(chalk.cyan('  ❯') + chalk.white(` ${msg}`)),
+  success: (msg) => console.log(chalk.green('  ✓') + chalk.white(` ${msg}`)),
+  warn:    (msg) => console.log(chalk.yellow('  ⚠') + chalk.white(` ${msg}`)),
+  error:   (msg) => console.log(chalk.red('  ✗') + chalk.white(` ${msg}`)),
+  debug:   (msg) => config.isDev && console.log(chalk.gray('  ·') + chalk.gray(` ${msg}`)),
+  divider: ()    => console.log(chalk.gray('  ' + '─'.repeat(44))),
+  blank:   ()    => console.log(''),
+};
 
 (async () => {
-  logger.info(`[Vogue] Starting ${config.botName} v${config.version}...`);
+  printBanner();
 
-  const saved  = await Session.load(config.sessionName);
+  // ─── Session ────────────────────────────────
+  log.info('Loading session...');
+  const saved   = await Session.load(config.sessionName);
   const session = new StringSession(saved);
 
+  // ─── Client ─────────────────────────────────
+  log.info('Initializing Telegram client...');
   const client = new TelegramClient(session, config.apiId, config.apiHash, {
     connectionRetries: 5,
     autoReconnect:     true,
   });
 
+  // ─── Auth ───────────────────────────────────
+  log.blank();
+  log.info('Authenticating...');
   await client.start({
-    phoneNumber: () => input.text('[Auth] Nomor HP (+628xxx): '),
-    password:    () => input.text('[Auth] 2FA Password: '),
-    phoneCode:   () => input.text('[Auth] Kode OTP: '),
-    onError:     (err) => logger.error(`[Auth] ${err.message}`),
+    phoneNumber: () => input.text(chalk.gray('  › ') + 'Phone number (+628xxx): '),
+    password:    () => input.text(chalk.gray('  › ') + '2FA Password: '),
+    phoneCode:   () => input.text(chalk.gray('  › ') + 'OTP Code: '),
+    onError:     (err) => log.error(`Auth failed: ${err.message}`),
   });
 
+  log.success('Connected to Telegram');
+
+  // ─── Save Session ───────────────────────────
   await Session.save(config.sessionName, client.session.save());
-  logger.info('[Vogue] Session tersimpan');
+  log.success('Session saved');
 
+  // ─── Commands ───────────────────────────────
+  log.blank();
+  log.divider();
+  log.info('Loading commands...');
   loadCommands(path.resolve(__dirname, 'src/Commands'));
+  log.success(`${commands.size} commands registered`);
+  log.divider();
 
+  // ─── Handler ────────────────────────────────
   client.addEventHandler(async (event) => {
     try {
       const msg  = event.message;
@@ -127,9 +167,11 @@ const loadCommands = (dir) => {
       if (!cmd) return;
 
       if (config.ownerId && Number(msg.senderId) !== config.ownerId) {
-        logger.warn(`[Auth] Blocked: ${msg.senderId}`);
+        log.warn(`Blocked unauthorized: ${msg.senderId}`);
         return;
       }
+
+      log.debug(`CMD ${config.prefix}${name} — user=${msg.senderId}`);
 
       await cmd.execute({
         client,
@@ -139,19 +181,26 @@ const loadCommands = (dir) => {
       });
 
     } catch (err) {
-      logger.error(`[Handler] ${err.message}`);
+      log.error(`Handler: ${err.message}`);
     }
   }, new NewMessage({}));
 
-  logger.info(`[Vogue] ✓ Ready — prefix "${config.prefix}"`);
+  // ─── Ready ──────────────────────────────────
+  log.blank();
+  log.success(chalk.magenta.bold(`${config.botName} is online`) + chalk.gray(` — prefix "${config.prefix}"`));
+  log.blank();
 
+  // ─── Shutdown ───────────────────────────────
   process.on('SIGINT', async () => {
-    logger.info('[Vogue] Shutdown...');
+    log.blank();
+    log.warn('Shutting down...');
     await client.disconnect();
+    log.success('Disconnected. Goodbye.');
+    log.blank();
     process.exit(0);
   });
 
 })().catch((err) => {
-  console.error('[Vogue] Boot failed:', err.message);
+  log.error(`Boot failed: ${err.message}`);
   process.exit(1);
 });
