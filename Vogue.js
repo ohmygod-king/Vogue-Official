@@ -40,19 +40,6 @@ const Session = {
   }),
 };
 
-const client = new TelegramClient(session, config.apiId, config.apiHash, {
-  connectionRetries: 5,
-  autoReconnect:     true,
-  baseLogger: {
-    levels: [],
-    log: () => {},
-    error: () => {},
-    warn: () => {},
-    info: () => {},
-    debug: () => {},
-  },
-});
-
 const commands = new Map();
 
 const register = (def) => {
