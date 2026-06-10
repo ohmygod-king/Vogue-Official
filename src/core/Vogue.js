@@ -12,8 +12,6 @@ const logger     = require('../Utils/logger');
 
 
 const SessionStore = require('../../Database/session');
-const config = require('../Settings');
-
 const savedSession = SessionStore.load(config.sessionName) || '';
 const session = new StringSession(savedSession);
 
