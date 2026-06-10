@@ -12,29 +12,42 @@ module.exports = {
     const allCmds = registry.getAllCommands();
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
     
-    const buttons = categories.map((cat) => ([
-      new Api.KeyboardButtonCallback({
-        text: `📂 ${cat}`,
-        data: Buffer.from(`help:${cat}`),
-      }),
-    ]));
+    const rows = categories.map((cat) =>
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: `📂 ${cat}`,
+            data: Buffer.from(`help:${cat}`),
+          }),
+        ],
+      })
+    );
     
-    buttons.push([
-      new Api.KeyboardButtonCallback({
-        text: '✖ Close',
-        data: Buffer.from('help:close'),
-      }),
-    ]);
+    rows.push(
+      new Api.KeyboardButtonRow({
+        buttons: [
+          new Api.KeyboardButtonCallback({
+            text: '✖ Close',
+            data: Buffer.from('help:close'),
+          }),
+        ],
+      })
+    );
     
     // Hapus pesan command asli
     await message.delete({ revoke: true });
     
-    console.log('Buttons:', JSON.stringify(buttons, null, 2));
+    // Ambil chat via getEntity
+    const chat = await message.getChat();
     
-    // Kirim ke chat yang sama pakai sendMessage bawaan gramjs
-    await client.sendMessage(message.peerId, {
-      message: '🌸 Vogue Help\n\nPilih kategori:',
-      buttons,
-    });
+    await client.invoke(
+      new Api.messages.SendMessage({
+        peer: chat,
+        message: '🌸 Vogue Help\n\nPilih kategori:',
+        replyMarkup: new Api.ReplyInlineMarkup({ rows }),
+        noWebpage: true,
+        randomId: BigInt(Math.floor(Math.random() * 1e15)),
+      })
+    );
   },
 };
