@@ -11,7 +11,7 @@ const { defaultChain } = require('./middleware');
 const logger     = require('../Utils/logger');
 
 
-const SessionStore = require('../../Database/session');
+const SessionStore = require('../Database/session');
 const savedSession = SessionStore.load(config.sessionName) || '';
 const session = new StringSession(savedSession);
 
@@ -34,7 +34,7 @@ async function boot() {
 
   logger.info('[Vogue] Berhasil terkoneksi ke Telegram');
 
- 
+  
   const sessionString = client.session.save();
   await SessionStore.save(config.sessionName, sessionString);
   logger.info('[Vogue] Session tersimpan ke database');
