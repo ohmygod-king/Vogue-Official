@@ -19,8 +19,16 @@ module.exports = {
       })
     ]));
 
+    // Tambah close button
+    buttons.push([
+      new Api.KeyboardButtonCallback({
+        text: '✖ Close',
+        data: Buffer.from('help:close'),
+      })
+    ]);
+
     await client.sendMessage(message.chatId, {
-      message: `🌸 **${config.botName} Help**\n\nPilih kategori:`,
+      message:   `🌸 **Vogue Help**\n\nPilih kategori:`,
       parseMode: 'md',
       buttons,
     });

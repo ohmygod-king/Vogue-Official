@@ -213,6 +213,41 @@ const log = {
         return;
       }
       
+      if (action === 'back') {
+        const allCmds    = registry.getAllCommands();
+        const categories = [...new Set(allCmds.map((c) => c.category))].sort();
+      
+        const rows = categories.map((cat) => (
+          new Api.KeyboardButtonRow({
+            buttons: [
+              new Api.KeyboardButtonCallback({
+                text: `📂 ${cat}`,
+                data: Buffer.from(`help:${cat}`),
+              }),
+            ],
+          })
+        ));
+      
+        rows.push(new Api.KeyboardButtonRow({
+          buttons: [
+            new Api.KeyboardButtonCallback({
+              text: '✖ Close',
+              data: Buffer.from('help:close'),
+            }),
+          ],
+        }));
+      
+        await client.invoke(new Api.messages.EditMessage({
+          peer:    update.peer,
+          id:      update.msgId,
+          message: `🌸 **Vogue Help**\n\nPilih kategori:`,
+          parseMode: 'md',
+          replyMarkup: new Api.ReplyInlineMarkup({ rows }),
+        }));
+      
+        return;
+      }
+      
       const cmds = registry.getByCategory(action);
       if (!cmds.length) return;
       
