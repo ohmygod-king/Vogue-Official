@@ -12,7 +12,7 @@ const logger     = require('../Utils/logger');
 
 
 const SessionStore = require('../Database/session');
-const raw = await SessionStore.load(config.sessionName);
+const raw = SessionStore.load(config.sessionName);
 const session = new StringSession(typeof raw === 'string' ? raw : '');
 
 async function boot() {
