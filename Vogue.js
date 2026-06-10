@@ -121,57 +121,68 @@ const log = {
 
 (async () => {
   printBanner();
-  
-  const saved = await Session.load(config.sessionName);
+
+  const saved   = await Session.load(config.sessionName);
   const session = new StringSession(saved);
-  
-  const client = new TelegramClient(session, config.apiId, config.apiHash, {
+
+  const client  = new TelegramClient(session, config.apiId, config.apiHash, {
     connectionRetries: 5,
-    autoReconnect: true,
+    autoReconnect:     true,
     baseLogger: {
       levels: [],
-      log: () => {},
-      error: () => {},
-      warn: () => {},
-      info: () => {},
-      debug: () => {},
+      log:    () => {},
+      error:  () => {},
+      warn:   () => {},
+      info:   () => {},
+      debug:  () => {},
     },
   });
-  
+
   await client.start({
     phoneNumber: () => input.text(chalk.gray('  › ') + 'Phone number (+628xxx): '),
-    password: () => input.text(chalk.gray('  › ') + '2FA Password: '),
-    phoneCode: () => input.text(chalk.gray('  › ') + 'OTP Code: '),
-    onError: (err) => log.error(`Auth failed: ${err.message}`),
+    password:    () => input.text(chalk.gray('  › ') + '2FA Password: '),
+    phoneCode:   () => input.text(chalk.gray('  › ') + 'OTP Code: '),
+    onError:     (err) => log.error(`Auth failed: ${err.message}`),
   });
-  
+
   log.success('Connected to Telegram');
-  
+
   await Session.save(config.sessionName, client.session.save());
   log.success('Session saved');
-  
+
   log.blank();
   log.divider();
+
+  // ✅ registry harus di-init DI SINI — sebelum handler apapun
+  const registry = {
+    getAllCommands:  () => Array.from(commands.values())
+                           .filter((v, i, a) => a.findIndex(c => c.name === v.name) === i),
+    getByCategory:  (cat) => Array.from(commands.values())
+                           .filter((v, i, a) => a.findIndex(c => c.name === v.name) === i)
+                           .filter((c) => c.category.toLowerCase() === cat.toLowerCase()),
+  };
+
   loadCommands(path.resolve(__dirname, 'src/Commands'));
   log.success(`${commands.size} commands registered`);
   log.divider();
-  
+
+  // ✅ Message handler — registry sudah ada
   client.addEventHandler(async (event) => {
     try {
       const msg = event.message;
       if (!msg?.text) return;
-      
+
       const text = msg.text.trim();
       if (!text.startsWith(config.prefix)) return;
-      
+
       const parts = text.slice(config.prefix.length).trim().split(/\s+/);
-      const name = parts[0].toLowerCase();
-      const args = parts.slice(1);
-      const cmd = resolve(name);
+      const name  = parts[0].toLowerCase();
+      const args  = parts.slice(1);
+      const cmd   = resolve(name);
       if (!cmd) return;
-      
+
       if (config.ownerId && Number(msg.senderId) !== config.ownerId) return;
-      
+
       await cmd.execute({
         client,
         message: msg,
@@ -179,45 +190,46 @@ const log = {
         registry,
         reply: (t) => msg.reply({ message: t }),
       });
-      
+
     } catch (err) {
       log.error(`Handler: ${err.message}`);
     }
   }, new NewMessage({}));
 
+  // ✅ Callback handler — registry sudah ada
   client.addEventHandler(async (update) => {
     try {
       if (!(update instanceof Api.UpdateBotCallbackQuery) &&
-        !(update instanceof Api.UpdateInlineBotCallbackQuery)) return;
-      
-      const data = update.data ?
-        Buffer.from(update.data).toString('utf-8') :
-        null;
-      
+          !(update instanceof Api.UpdateInlineBotCallbackQuery)) return;
+
+      const data = update.data
+        ? Buffer.from(update.data).toString('utf-8')
+        : null;
+
       if (!data || !data.startsWith('help:')) return;
-      
+
       const action = data.split(':')[1];
-      
+
       await client.invoke(new Api.messages.SetBotCallbackAnswer({
-        queryId: update.queryId,
-        alert: false,
-        message: '',
+        queryId:   update.queryId,
+        alert:     false,
+        message:   '',
         cacheTime: 0,
       }));
-      
+
       if (action === 'close') {
         await client.invoke(new Api.messages.DeleteMessages({
-          id: [update.msgId],
+          id:     [update.msgId],
           revoke: true,
         }));
         return;
       }
-      
+
       if (action === 'back') {
         const allCmds    = registry.getAllCommands();
         const categories = [...new Set(allCmds.map((c) => c.category))].sort();
-      
-        const rows = categories.map((cat) => (
+
+        const rows = categories.map((cat) =>
           new Api.KeyboardButtonRow({
             buttons: [
               new Api.KeyboardButtonCallback({
@@ -226,8 +238,8 @@ const log = {
               }),
             ],
           })
-        ));
-      
+        );
+
         rows.push(new Api.KeyboardButtonRow({
           buttons: [
             new Api.KeyboardButtonCallback({
@@ -236,29 +248,29 @@ const log = {
             }),
           ],
         }));
-      
+
         await client.invoke(new Api.messages.EditMessage({
-          peer:    update.peer,
-          id:      update.msgId,
-          message: `🌸 **Vogue Help**\n\nPilih kategori:`,
-          parseMode: 'md',
+          peer:        update.peer,
+          id:          update.msgId,
+          message:     `🌸 **Vogue Help**\n\nPilih kategori:`,
+          parseMode:   'md',
           replyMarkup: new Api.ReplyInlineMarkup({ rows }),
         }));
-      
         return;
       }
-      
+
+      // Show commands by category
       const cmds = registry.getByCategory(action);
       if (!cmds.length) return;
-      
+
       const text = cmds
         .map((c) => `• \`${config.prefix}${c.name}\` — ${c.description}`)
         .join('\n');
-      
+
       await client.invoke(new Api.messages.EditMessage({
-        peer: update.peer,
-        id: update.msgId,
-        message: `📂 **${action}**\n\n${text}`,
+        peer:      update.peer,
+        id:        update.msgId,
+        message:   `📂 **${action}**\n\n${text}`,
         parseMode: 'md',
         replyMarkup: new Api.ReplyInlineMarkup({
           rows: [
@@ -273,16 +285,16 @@ const log = {
           ],
         }),
       }));
-      
+
     } catch (err) {
       log.error(`Callback: ${err.message}`);
     }
   }, new Raw({}));
-  
+
   log.blank();
   log.success(chalk.magenta.bold(`${config.botName} is online`) + chalk.gray(` — prefix "${config.prefix}"`));
   log.blank();
-  
+
   process.on('SIGINT', async () => {
     log.blank();
     log.warn('Shutting down...');
@@ -291,7 +303,7 @@ const log = {
     log.blank();
     process.exit(0);
   });
-  
+
 })().catch((err) => {
   log.error(`Boot failed: ${err.message}`);
   process.exit(1);
