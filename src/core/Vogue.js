@@ -12,42 +12,50 @@ const logger     = require('../Utils/logger');
 
 
 const SessionStore = require('../Database/session');
-const savedSession = SessionStore.load(config.sessionName) || '';
-const session = new StringSession(savedSession);
+const raw = await SessionStore.load(config.sessionName);
+const session = new StringSession(typeof raw === 'string' ? raw : '');
 
 async function boot() {
   logger.info(`[Vogue] Starting ${config.botName} v${config.version}...`);
 
+  // 1. Load session dari DB
+  const raw     = await SessionStore.load(config.sessionName);
+  const session = new StringSession(typeof raw === 'string' ? raw : '');
+
+  // 2. Init client
   const client = new TelegramClient(session, config.apiId, config.apiHash, {
     connectionRetries: 5,
     retryDelay:        1000,
     autoReconnect:     true,
-    baseLogger:        logger,
   });
 
+  // 3. Connect + auth
   await client.start({
     phoneNumber: async () => await input.text('[Auth] Nomor HP (format +628xxx): '),
-    password:    async () => await input.text('[Auth] 2FA Password (kosongkan jika tidak ada): '),
+    password:    async () => await input.text('[Auth] 2FA Password (kosong jika tidak ada): '),
     phoneCode:   async () => await input.text('[Auth] Kode OTP dari Telegram: '),
     onError:     (err)    => logger.error(`[Auth] Error: ${err.message}`),
   });
 
-  logger.info('[Vogue] Berhasil terkoneksi ke Telegram');
-
-  
+  // 4. Simpan session setelah login
   const sessionString = client.session.save();
   await SessionStore.save(config.sessionName, sessionString);
   logger.info('[Vogue] Session tersimpan ke database');
 
+  // 5. Init registry & loader
   const registry = new Registry();
   const loader   = new Loader(registry);
 
+  // 6. Load commands
   loader.loadCommands();
 
+  // 7. Attach message handler
   _attachMessageHandler(client, registry);
 
+  // 8. Load events
   loader.loadEvents(client);
 
+  // 9. Ready
   const stats = registry.getStats();
   logger.info(
     `[Vogue] ✓ Ready — ` +
