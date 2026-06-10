@@ -11,7 +11,7 @@ const { defaultChain } = require('./middleware');
 const logger     = require('../Utils/logger');
 
 
-const SessionStore = require('../../Database/session');
+const SessionStore = require('../Database/session');
 const savedSession = SessionStore.load(config.sessionName) || '';
 const session = new StringSession(savedSession);
 
