@@ -1,17 +1,18 @@
 'use strict';
-module.exports = {
-  name:        'ping',
-  description: 'Cek apakah userbot aktif dan ukur response time',
-  category:    'Utils',
-  aliases:     ['p', 'test'],
 
-  execute: async (ctx) => {
+module.exports = {
+  name:    'ping',
+  aliases: ['p'],
+  category: 'Utils',
+  description: 'Cek response time',
+
+  execute: async ({ message }) => {
     const start = Date.now();
-    await ctx.message.edit({ text: '`Pinging...`' });
+    await message.edit({ text: 'Pinging...' });
     const latency = Date.now() - start;
-    await ctx.message.edit({
-      text:        ` *Pong!*\n⚡ Latency: \`${latency}ms\``,
-      parseMode:   'markdown',
+    await message.edit({
+      text:      `🏓 **Pong!** \`${latency}ms\``,
+      parseMode: 'md',
     });
   },
 };
