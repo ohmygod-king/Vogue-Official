@@ -9,7 +9,9 @@ module.exports = {
   aliases: ['h', 'menu'],
   
   execute: async ({ client, message, registry }) => {
-    const allCmds = registry.getAllCommands();
+      const allCmds = registry.getAllCommands();
+      console.log('Total commands:', allCmds.length);
+      console.log('Commands:', allCmds.map(c => ({ name: c.name, category: c.category })));
     const categories = [...new Set(allCmds.map((c) => c.category))].sort();
     
     const rows = categories.map((cat) =>
