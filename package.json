@@ -1,17 +1,22 @@
 {
-  "name": "Vogue Official",
+  "name": "vogue-official",
   "version": "1.0.0",
-  "description": "Vogue Userbot — Clean Architecture Telegram Userbot",
+  "description": "Vogue Userbot",
+  "main": "src/core/Vogue.js",
+  "type": "commonjs",
   "engines": {
     "node": ">=23.0.0"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/core/Vogue.js",
+    "dev": "node --watch src/core/Vogue.js"
   },
   "dependencies": {
-    "telegram": "^2.26.22",
+    "telegram": "^2.26.0",
+    "better-sqlite3": "^9.6.0",
     "input": "^1.0.1",
-    "winston": "^3.13.0",
-    "chalk": "^4.1.2"
+    "chalk": "^4.1.2",
+    "pino": "^9.3.1",
+    "pino-pretty": "^11.0.0"
   }
 }

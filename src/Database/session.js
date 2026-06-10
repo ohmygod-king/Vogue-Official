@@ -3,7 +3,7 @@
 const Database = require('better-sqlite3');
 const path     = require('path');
 const fs       = require('fs');
-const logger   = require('../src/Utils/logger');
+const logger   = require('../Utils/logger');
 const DB_DIR  = path.resolve(__dirname);
 const DB_PATH = path.join(DB_DIR, 'vogue.db');
 
