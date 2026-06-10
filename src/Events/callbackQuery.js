@@ -1,7 +1,7 @@
 'use strict';
 
-const { CallbackQuery } = require('telegram/events');
-const logger            = require('../Utils/logger');
+const { NewCallbackQuery } = require('telegram/events');
+const logger               = require('../Utils/logger');
 
 const handler = async (event) => {
   try {
@@ -9,18 +9,14 @@ const handler = async (event) => {
     if (!data) return;
 
     logger.debug(
-      `[Event:callbackQuery] ` +
-      `from=${event.query.userId} ` +
-      `data="${data}"`
+      `[Event:callbackQuery] from=${event.query.userId} data="${data}"`
     );
-
   } catch (err) {
     logger.error(`[Event:callbackQuery] Error: ${err.message}`);
-    logger.debug(err.stack);
   }
 };
 
 module.exports = {
-  event:   new CallbackQuery({}),
+  event:   new NewCallbackQuery({}),
   handler,
 };

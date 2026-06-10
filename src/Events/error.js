@@ -11,9 +11,10 @@ process.on('unhandledRejection', (reason) => {
   logger.error(`[Event:error] Unhandled Rejection: ${String(reason)}`);
 });
 
+// ✅ Dummy event agar loader tidak throw
+const { NewMessage } = require('telegram/events');
 
 module.exports = {
-  event:   null,
+  event:   new NewMessage({ outgoing: false, incoming: false }),
   handler: () => {},
-  _selfManaged: true,
 };
