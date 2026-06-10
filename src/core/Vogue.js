@@ -14,9 +14,6 @@ const logger     = require('./Utils/logger');
 const SessionStore = require('../Database/session');
 const savedSession = await SessionStore.load(config.sessionName) || '';
 const session = new StringSession(savedSession);
-const sessionString = client.session.save();
-await SessionStore.save(config.sessionName, sessionString);
-logger.info('[Vogue] Session tersimpan ke database');
 
 async function boot() {
   logger.info(`[Vogue] Starting ${config.botName} v${config.version}...`);
@@ -38,7 +35,8 @@ async function boot() {
   logger.info('[Vogue] Berhasil terkoneksi ke Telegram');
 
   const sessionString = client.session.save();
-  logger.info(`[Vogue] Session String (simpan ini):\n${sessionString}`);
+  await SessionStore.save(config.sessionName, sessionString);
+  logger.info('[Vogue] Session tersimpan ke database');
 
   const registry = new Registry();
   const loader   = new Loader(registry);
