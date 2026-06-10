@@ -69,6 +69,13 @@ class Loader {
           throw new Error('Event module harus export field "handler" berupa function');
         }
 
+
+        if (mod._selfManaged) {
+          logger.debug(`[Loader] Self-managed event: ${this._shortPath(filePath)}`);
+          loaded++;
+          continue;
+        }
+        
         client.addEventHandler(mod.handler, mod.event);
         loaded++;
         logger.debug(

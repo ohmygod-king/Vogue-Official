@@ -10,7 +10,12 @@ const Loader     = require('./loader');
 const { defaultChain } = require('./middleware');
 const logger     = require('../Utils/logger');
 
-const session = new StringSession('');
+
+const SessionStore = require('../../Database/session');
+const config = require('../Settings');
+
+const savedSession = SessionStore.load(config.sessionName) || '';
+const session = new StringSession(savedSession);
 
 async function boot() {
   logger.info(`[Vogue] Starting ${config.botName} v${config.version}...`);

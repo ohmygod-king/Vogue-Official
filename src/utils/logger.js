@@ -1,7 +1,7 @@
 // src/utils/logger.js
 const winston = require('winston');
 const chalk   = require('chalk');
-const settings = require('../settings');
+const settings = require('../Settings');
 
 const { combine, timestamp, printf } = winston.format;
 

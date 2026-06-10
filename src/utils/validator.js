@@ -1,5 +1,5 @@
 
-const settings   = require('../settings');
+const settings   = require('../Settings');
 const { getSenderId } = require('./helpers');
 
 const isOwner = (message) => {
