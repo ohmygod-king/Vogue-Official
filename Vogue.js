@@ -2,7 +2,7 @@
 
 const { TelegramClient } = require('telegram');
 const { StringSession }  = require('telegram/sessions');
-const { NewMessage }     = require('telegram/events');
+const { NewMessage, Raw }     = require('telegram/events');
 const input              = require('input');
 const sqlite3            = require('sqlite3').verbose();
 const fs                 = require('fs');
@@ -176,6 +176,7 @@ const log = {
         client,
         message: msg,
         args,
+        registry,
         reply: (t) => msg.reply({ message: t }),
       });
       
@@ -183,6 +184,65 @@ const log = {
       log.error(`Handler: ${err.message}`);
     }
   }, new NewMessage({}));
+
+  client.addEventHandler(async (update) => {
+    try {
+      if (!(update instanceof Api.UpdateBotCallbackQuery) &&
+        !(update instanceof Api.UpdateInlineBotCallbackQuery)) return;
+      
+      const data = update.data ?
+        Buffer.from(update.data).toString('utf-8') :
+        null;
+      
+      if (!data || !data.startsWith('help:')) return;
+      
+      const action = data.split(':')[1];
+      
+      await client.invoke(new Api.messages.SetBotCallbackAnswer({
+        queryId: update.queryId,
+        alert: false,
+        message: '',
+        cacheTime: 0,
+      }));
+      
+      if (action === 'close') {
+        await client.invoke(new Api.messages.DeleteMessages({
+          id: [update.msgId],
+          revoke: true,
+        }));
+        return;
+      }
+      
+      const cmds = registry.getByCategory(action);
+      if (!cmds.length) return;
+      
+      const text = cmds
+        .map((c) => `• \`${config.prefix}${c.name}\` — ${c.description}`)
+        .join('\n');
+      
+      await client.invoke(new Api.messages.EditMessage({
+        peer: update.peer,
+        id: update.msgId,
+        message: `📂 **${action}**\n\n${text}`,
+        parseMode: 'md',
+        replyMarkup: new Api.ReplyInlineMarkup({
+          rows: [
+            new Api.KeyboardButtonRow({
+              buttons: [
+                new Api.KeyboardButtonCallback({
+                  text: '« Back',
+                  data: Buffer.from('help:back'),
+                }),
+              ],
+            }),
+          ],
+        }),
+      }));
+      
+    } catch (err) {
+      log.error(`Callback: ${err.message}`);
+    }
+  }, new Raw({}));
   
   log.blank();
   log.success(chalk.magenta.bold(`${config.botName} is online`) + chalk.gray(` — prefix "${config.prefix}"`));
