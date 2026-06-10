@@ -10,7 +10,7 @@ module.exports = {
     await ctx.message.edit({ text: '`Pinging...`' });
     const latency = Date.now() - start;
     await ctx.message.edit({
-      text:        `🏓 *Pong!*\n⚡ Latency: \`${latency}ms\``,
+      text:        ` *Pong!*\n⚡ Latency: \`${latency}ms\``,
       parseMode:   'markdown',
     });
   },

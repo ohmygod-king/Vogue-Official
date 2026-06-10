@@ -2,20 +2,16 @@
   "name": "vogue-official",
   "version": "1.0.0",
   "description": "Vogue Userbot",
-  "main": "src/core/Vogue.js",
+  "main": "Vogue.js",
   "type": "commonjs",
-  "engines": {
-    "node": ">=23.0.0"
-  },
   "scripts": {
-    "start": "node src/core/Vogue.js",
-    "dev": "node --watch src/core/Vogue.js"
+    "start": "node Vogue.js",
+    "dev": "node --watch Vogue.js"
   },
   "dependencies": {
     "telegram": "^2.26.0",
     "sqlite3": "^5.1.7",
     "input": "^1.0.1",
-    "chalk": "^4.1.2",
     "pino": "^9.3.1",
     "pino-pretty": "^11.0.0"
   }
