@@ -36,7 +36,8 @@ module.exports = {
 
     await message.delete({ revoke: true });
 
-    await client.invoke(
+    // Kirim dengan bot = undefined (userbot, bukan bot)
+    const sent = await client.invoke(
       new Api.messages.SendMessage({
         peer:        message.peerId,
         message:     '🌸 Vogue Help\n\nPilih kategori:',
@@ -45,5 +46,7 @@ module.exports = {
         randomId:    BigInt(Math.floor(Math.random() * 1e15)),
       })
     );
+
+    console.log('Sent:', JSON.stringify(sent, null, 2));
   },
 };
