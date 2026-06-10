@@ -1,0 +1,17 @@
+{
+  "name": "Vogue Official",
+  "version": "1.0.0",
+  "description": "Vogue Userbot — Clean Architecture Telegram Userbot",
+  "engines": {
+    "node": ">=23.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "telegram": "^2.26.22",
+    "input": "^1.0.1",
+    "winston": "^3.13.0",
+    "chalk": "^4.1.2"
+  }
+}
